@@ -2,22 +2,28 @@
 #include <SoftwareSerial.h>
 #include <HardwareSerial.h>
 #include <RTClib.h>
-#include "GPRS.h"
-#include "GPS.h"
+#include <NTPClient.h>
+#include "GetTime.h"
 #include "RTC.h"
 
 void setup() {
-  // initGPS();
-  // delay(10000);
   Serial.begin(9600);
-  initRTC();
-  delay(10000);
-  onGPRS();
+  // initGPS();
+  OnGPRS();
   configGPRS();
 }
 
 void loop() {
-  // configGPS();
-  SIMRTC();
-  configRTC();
+ switch (TypeTime) {
+    case 0:
+      configGPS();
+    
+    case 1:
+      if (ModeGPRS == 0){
+        Serial.println(" -- EN CONSTRUCCIÓN --");
+      }
+      else if (ModeGPRS == 1){
+        GPRSDateTime();
+    }
+  }
 }

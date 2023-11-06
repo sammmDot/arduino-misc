@@ -1,21 +1,11 @@
+#include <TinyGPSPlus.h>
+
 #define RX_PIN 10
 #define TX_PIN 9
 #define GPS_BAUD 9600
 
 TinyGPSPlus gps;
 SoftwareSerial ss(RX_PIN, TX_PIN);
-
-void initGPS()
-{
-  Serial.begin(9600); // MONITOR SERIAL
-  ss.begin(GPS_BAUD);
-
-  Serial.println(F(" -- INICIALIZANDO MODULO -- "));
-  Serial.println();
-  Serial.println(F("Sats   Latitude   Longitude   Alt    Date       Time"));
-  Serial.println(F("       (deg)      (deg)       (m)"));
-  Serial.println(F("-----------------------------------------------------"));
-}
 
 static void smartDelay(unsigned long ms)
 {
@@ -61,7 +51,34 @@ static void printInt(unsigned long val, bool valid, int len)
   smartDelay(0);
 }
 
-static void printDateTime(TinyGPSDate &d, TinyGPSTime &t)
+//**********************************************************************************
+
+void configGPS(){
+  Serial.println(F(" -- OBTENIENDO DATOS DEL SATELITE -- "));
+  printInt(gps.satellites.value(), gps.satellites.isValid(), 5);
+  printFloat(gps.location.lat(), gps.location.isValid(), 11, 6);
+  printFloat(gps.location.lng(), gps.location.isValid(), 12, 6);
+  printFloat(gps.altitude.meters(), gps.altitude.isValid(), 7, 2);
+  GPSDateTime(gps.date, gps.time);
+  Serial.println();
+
+  smartDelay(1000);
+
+  if (millis() > 5000 && gps.charsProcessed() < 10)
+    Serial.println(F("No se reciben datos desde el GPS. Revisa el cableado."));
+}
+
+void initGPS(){
+  Serial.println(F(" -- INICIALIZANDO MODULO -- "));
+  ss.begin(GPS_BAUD);
+  Serial.println();
+  Serial.println(F("Sats   Latitude   Longitude   Alt    Date       Time"));
+  Serial.println(F("       (deg)      (deg)       (m)"));
+  Serial.println(F("-----------------------------------------------------"));
+  configGPS();
+}
+
+static void GPSDateTime(TinyGPSDate &d, TinyGPSTime &t)
 {
   if (!d.isValid())
   {
@@ -81,24 +98,10 @@ static void printDateTime(TinyGPSDate &d, TinyGPSTime &t)
   else
   {
     char sz[32];
-    sprintf(sz, "%02d:%02d:%02d ", t.hour() - 3, t.minute(), t.second());
+    sprintf(sz, "%02d:%02d:%02d ", t.hour(), t.minute(), t.second());
     Serial.print(sz);
   }
 
   printInt(d.age(), d.isValid(), 5);
   smartDelay(0);
-}
-
-void configGPS(){
-  printInt(gps.satellites.value(), gps.satellites.isValid(), 5);
-  printFloat(gps.location.lat(), gps.location.isValid(), 11, 6);
-  printFloat(gps.location.lng(), gps.location.isValid(), 12, 6);
-  printFloat(gps.altitude.meters(), gps.altitude.isValid(), 7, 2);
-  printDateTime(gps.date, gps.time);
-  Serial.println();
-
-  smartDelay(1000);
-
-  if (millis() > 5000 && gps.charsProcessed() < 10)
-    Serial.println(F("No se reciben datos desde el GPS. Revisa el cableado."));
 }
